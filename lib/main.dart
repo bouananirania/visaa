@@ -3,8 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-// exp reg du tel gender .... + fiche
-
 Widget _buildTitleWithInputField(
   String language,
   bool showErrors,
@@ -48,6 +46,12 @@ Widget _buildTitleWithInputField(
                   : TextInputType.text,
           style:
               const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+          textAlign: language == 'ar'
+              ? TextAlign.right
+              : TextAlign.left, // Alignement du texte saisi
+          textDirection: language == 'ar'
+              ? TextDirection.rtl
+              : TextDirection.ltr, // Direction du texte
           decoration: InputDecoration(
             hintText: hintText,
             hintStyle:
@@ -78,36 +82,140 @@ Widget _buildTitleWithInputField(
           validator: (value) {
             if (showErrors == false) return null;
             if (value == null || value.isEmpty) {
-              return "";
+              return " ";
             }
-            if (isText && !RegExp(r'^[A-Za-z\s]+$').hasMatch(value)) {
-              return "Seules les lettres sont autorisées";
+            if (isText && !RegExp(r'^[A-Za-z\sء-ي]+$').hasMatch(value)) {
+              return language == 'ar'
+                  ? "يجب أن يحتوي على حروف فقط"
+                  : "Only letters are allowed";
             }
             if (isNumeric && !RegExp(r'^[0-9\s]+$').hasMatch(value)) {
-              return "Seuls les chiffres sont autorisés";
+              return language == 'ar'
+                  ? "يجب أن يحتوي على أرقام فقط"
+                  : "Only numbers are allowed";
             }
             if (isDate && !RegExp(r'^\d{2}/\d{2}/\d{4}$').hasMatch(value)) {
-              return "La date doit être au format JJ/MM/AAAA";
+              return language == 'ar'
+                  ? "يجب أن تكون التاريخ بتنسيق يوم/شهر/سنة"
+                  : "Date must be in DD/MM/YYYY format";
             }
             if (isAlphanumeric &&
-                !RegExp(r'^[A-Za-z0-9\s]+$').hasMatch(value)) {
-              return "Seules les lettres et chiffres sont autorisés";
+                !RegExp(r'^[A-Za-z0-9\sء-ي]+$').hasMatch(value)) {
+              return language == 'ar'
+                  ? "يجب أن يحتوي على أحرف وأرقام فقط"
+                  : "Only letters and numbers are allowed";
             }
             if (isGender &&
                 value.toLowerCase() != 'homme' &&
-                value.toLowerCase() != 'femme') {
-              return "Entrez 'Homme' ou 'Femme'";
+                value.toLowerCase() != 'femme' &&
+                value.toLowerCase() != 'ذكر' &&
+                value.toLowerCase() != 'أنثى') {
+              return language == 'ar'
+                  ? "أدخل 'ذكر' أو 'أنثى'"
+                  : "Enter 'Male' or 'Female'";
             }
             if (isPhone &&
                 !RegExp(r'^(05|06|07)\s?\d{2}\s?\d{2}\s?\d{2}\s?\d{2}$')
                     .hasMatch(value)) {
-              return "Le numéro doit contenir 10 chiffres et commencer par 05, 06 ou 07";
+              return language == 'ar'
+                  ? "يجب أن يحتوي الرقم على 10 أرقام ويبدأ بـ 05 أو 06 أو 07"
+                  : "The number must contain 10 digits and start with 05, 06, or 07";
             }
             return null; // Le champ est valide
           },
         ),
       ],
     ),
+  );
+}
+
+Widget _buildTitleWithDropdown(
+  String language,
+  bool showErrors,
+  String title,
+  String hintText,
+  TextEditingController controller,
+  List<String> options, {
+  bool isRequired = false,
+}) {
+  String? selectedValue; // Gérer localement la valeur sélectionnée
+
+  return StatefulBuilder(
+    builder: (context, setState) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Column(
+          crossAxisAlignment: language == 'ar'
+              ? CrossAxisAlignment.end // Alignement à droite pour l'arabe
+              : CrossAxisAlignment
+                  .start, // Alignement à gauche pour les autres langues
+          children: [
+            Text(
+              title,
+              textAlign: language == 'ar' ? TextAlign.right : TextAlign.left,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.green,
+                fontWeight: FontWeight.bold,
+                decoration: TextDecoration.none,
+              ),
+            ),
+            const SizedBox(height: 5),
+            DropdownButtonFormField<String>(
+              value: selectedValue,
+              onChanged: (newValue) {
+                setState(() {
+                  selectedValue = newValue;
+                });
+              },
+              isExpanded: true,
+              items: options.map((String option) {
+                return DropdownMenuItem<String>(
+                  value: option,
+                  child: Text(
+                    option,
+                    textAlign:
+                        language == 'ar' ? TextAlign.right : TextAlign.left,
+                    textDirection: language == 'ar'
+                        ? TextDirection.rtl
+                        : TextDirection.ltr,
+                    style: const TextStyle(
+                        color: Colors.grey, fontWeight: FontWeight.bold),
+                  ),
+                );
+              }).toList(),
+              decoration: InputDecoration(
+                hintText: hintText,
+                hintStyle:
+                    const TextStyle(color: Color.fromARGB(255, 158, 158, 158)),
+                hintTextDirection:
+                    language == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 7.0, horizontal: 5.0),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(
+                      color: Color.fromARGB(255, 112, 218, 115), width: 2.0),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(
+                      color: Color.fromARGB(255, 112, 218, 115), width: 3.5),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              /*validator: (value) {
+                if (isRequired && (value == null || value.isEmpty)) {
+                  return " ";
+                }
+                return null;
+              },*/
+            ),
+          ],
+        ),
+      );
+    },
   );
 }
 
@@ -202,10 +310,18 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text(
-            "Veuillez remplir tous les champs correctement  avant de continuer."),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _language == 'ar'
+                ? "يرجى ملء جميع الحقول بشكل صحيح قبل المتابعة."
+                : "Please fill in all fields correctly before continuing.",
+            textAlign: _language == 'ar' ? TextAlign.right : TextAlign.left,
+            textDirection:
+                _language == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+          ),
+        ),
+      );
     }
   }
 
@@ -250,7 +366,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   padding: const EdgeInsets.all(0.0),
                   child: DropdownButton<String>(
                     value: _language,
-                    items: [
+                    items: const [
                       DropdownMenuItem(
                         value: 'ar',
                         child: Text('العربية',
@@ -265,7 +381,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     onChanged: _changeLanguage,
                     dropdownColor:
                         Colors.green, // Pour une meilleure visibilité
-                    icon: Icon(Icons.language, color: Colors.white),
+                    icon: const Icon(Icons.language, color: Colors.white),
                   ),
                 ),
               ),
@@ -404,35 +520,92 @@ class _MyHomePageState extends State<MyHomePage> {
                                 ? Colors.grey
                                 : const Color.fromARGB(255, 112, 218, 115),
                           ),
-                          child: const Text('Précédent',
-                              style: TextStyle(color: Colors.white)),
+                          child: Text(
+                            _language == 'ar'
+                                ? 'السابق'
+                                : 'Previous', // Texte du bouton basé sur la langue
+                            style: const TextStyle(color: Colors.white),
+                          ),
                         ),
+
                         SizedBox(
                             width: screenWidth *
                                 0.05), // Espacement entre les boutons
+
                         ElevatedButton(
-                          /*onPressed: () => {
-                            setState(() {
-                              _showErrors = true;
-                            }),
-                            (_currentPage == 5) ? null : goToNextPage,
-                          },*/
-                          onPressed: (_currentPage == 5) ? null : goToNextPage,
+                          onPressed: () {
+                            // Vérification si on est à la dernière page
+                            if (_currentPage == 5) {
+                              // Vérifier si tous les champs de la page actuelle sont valides
+                              if (isPage6Valid) {
+                                // Afficher le message de succès dans un dialog personnalisé
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    backgroundColor: Colors.green[
+                                        50], // Couleur de fond verte claire
+                                    content: Row(
+                                      children: [
+                                        Icon(
+                                          Icons
+                                              .check_circle, // Icône de check verte
+                                          color: Colors.green,
+                                          size: 30,
+                                        ),
+                                        SizedBox(width: 10),
+                                        Text(
+                                          _language == 'ar'
+                                              ? 'تم إرسال النموذج بنجاح'
+                                              : 'Form submitted successfully',
+                                          style: TextStyle(
+                                            color: Colors
+                                                .green[800], // Couleur du texte
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                // Afficher un message d'erreur si les champs ne sont pas valides
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      _language == 'ar'
+                                          ? "يرجى ملء جميع الحقول بشكل صحيح قبل المتابعة."
+                                          : "Please fill in all fields correctly before continuing.",
+                                      textAlign: _language == 'ar'
+                                          ? TextAlign.right
+                                          : TextAlign.left,
+                                      textDirection: _language == 'ar'
+                                          ? TextDirection.rtl
+                                          : TextDirection.ltr,
+                                    ),
+                                  ),
+                                );
+                              }
+                            } else {
+                              // Si on n'est pas à la dernière page, continuer normalement
+                              goToNextPage();
+                            }
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _currentPage == 5
-                                ? Colors
-                                    .grey // Désactivé en gris si sur la dernière page
+                                ? Colors.green
                                 : const Color.fromARGB(255, 112, 218, 115),
                           ),
-                          child: const Text(
-                            'Suivant',
-                            style: TextStyle(color: Colors.white),
+                          child: Text(
+                            _currentPage == 5
+                                ? (_language == 'ar' ? 'إرسال' : 'Submit')
+                                : (_language == 'ar' ? 'التالي' : 'Next'),
+                            style: const TextStyle(color: Colors.white),
                           ),
                         ),
                       ],
                     ),
                     SizedBox(
-                        height: screenHeight * 0.01), // Espacement adaptatif
+                        height: screenHeight * 0.02), // Espacement adaptatif
                   ],
                 ),
               ),
@@ -472,6 +645,7 @@ class _Page1State extends State<Page1> {
   final TextEditingController adresseController = TextEditingController();
   final TextEditingController numeroController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  String selectedOption = 'no option';
 
   late String nameCompletValid;
 
@@ -491,7 +665,9 @@ class _Page1State extends State<Page1> {
 
   void _checkFieldsFilled() {
     setState(() {
-      if (_formKey.currentState!.validate()) {
+      final isImageSelected = widget.selectedImage != null;
+
+      if (_formKey.currentState!.validate() && isImageSelected) {
         widget.updatePageStatus(0, true);
       } else {
         widget.updatePageStatus(0, false);
@@ -503,8 +679,6 @@ class _Page1State extends State<Page1> {
   void dispose() {
     nameController.dispose();
     nameMereController.dispose();
-    statusController.dispose();
-    genreController.dispose();
     adresseController.dispose();
     numeroController.dispose();
     super.dispose();
@@ -514,7 +688,6 @@ class _Page1State extends State<Page1> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-
     return Scaffold(
       body: Form(
         key: _formKey,
@@ -541,7 +714,7 @@ class _Page1State extends State<Page1> {
                               widget._language == 'ar'
                                   ? 'اضغط لاختيار صورة الهوية الخاصة بك:'
                                   : 'Press to select your ID photo:',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
                                 color: Color.fromARGB(255, 112, 218, 115),
@@ -594,15 +767,26 @@ class _Page1State extends State<Page1> {
                                     : 'Enter mother\'s name',
                                 nameMereController,
                                 isText: true),
-                            _buildTitleWithInputField(
-                                widget._language,
-                                widget.showErrors,
-                                widget._language == 'ar' ? 'الحالة' : 'Status',
-                                widget._language == 'ar'
-                                    ? 'أدخل الحالة'
-                                    : 'Enter status',
-                                statusController,
-                                isText: true),
+                            _buildTitleWithDropdown(
+                              widget._language, // Langue
+                              widget.showErrors, // Gestion des erreurs
+                              widget._language == 'ar'
+                                  ? 'الحالة'
+                                  : 'Status', // Titre
+                              widget._language == 'ar'
+                                  ? 'أدخل الحالة'
+                                  : 'Enter status', // Texte indicatif (hintText)
+                              statusController, // Controller
+                              widget._language == 'ar'
+                                  ? ['عازب', 'متزوج', 'مطلق', 'أرمل']
+                                  : [
+                                      'Single',
+                                      'Married',
+                                      'Divorced',
+                                      'Widowed'
+                                    ], // Liste des options (à personnaliser selon votre contexte)
+                              isRequired: true, // Exemple d'option booléenne
+                            ),
                           ],
                         ),
                       ),
@@ -613,15 +797,19 @@ class _Page1State extends State<Page1> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            _buildTitleWithInputField(
-                                widget._language,
-                                widget.showErrors,
-                                widget._language == 'ar' ? 'الجنس' : 'Gender',
-                                widget._language == 'ar'
-                                    ? 'أدخل الجنس'
-                                    : 'Enter gender',
-                                genreController,
-                                isGender: true),
+                            _buildTitleWithDropdown(
+                              widget._language,
+                              widget.showErrors,
+                              widget._language == 'ar' ? 'الجنس' : 'Gender',
+                              widget._language == 'ar'
+                                  ? 'أدخل الجنس'
+                                  : 'Enter gender',
+                              genreController,
+                              widget._language == 'ar'
+                                  ? ['ذكر', 'أنثى'] // Options en arabe
+                                  : ['Male', 'Female'], // Options en anglais
+                              isRequired: true,
+                            ),
                             _buildTitleWithInputField(
                                 widget._language,
                                 widget.showErrors,
@@ -796,24 +984,90 @@ class _Page2State extends State<Page2> {
                               : 'Enter previous nation',
                           previousNationController,
                           isText: true),
-                      _buildTitleWithInputField(
-                          widget._language,
-                          widget.showErrors,
-                          widget._language == 'ar' ? 'الدين' : 'RELIGION',
-                          widget._language == 'ar'
-                              ? 'أدخل الدين'
-                              : 'Enter religion',
-                          religionController,
-                          isText: true),
-                      _buildTitleWithInputField(
-                          widget._language,
-                          widget.showErrors,
-                          widget._language == 'ar' ? 'الطائفة' : 'SEET',
-                          widget._language == 'ar'
-                              ? 'أدخل الطائفة'
-                              : 'Enter your seet',
-                          seetController,
-                          isText: true),
+                      _buildTitleWithDropdown(
+                        widget._language,
+                        widget.showErrors,
+                        widget._language == 'ar' ? 'الدين' : 'Religion',
+                        widget._language == 'ar'
+                            ? 'أدخل الدين'
+                            : 'Enter religion',
+                        religionController,
+                        widget._language == 'ar'
+                            ? [
+                                'الإسلام',
+                                'المسيحية',
+                                'اليهودية',
+                                'الهندوسية',
+                                'البوذية',
+                                'أخرى'
+                              ]
+                            : [
+                                'Islam',
+                                'Christianity',
+                                'Judaism',
+                                'Hinduism',
+                                'Buddhism',
+                                'Other'
+                              ],
+                        isRequired: true,
+                      ),
+                      _buildTitleWithDropdown(
+                        widget._language,
+                        widget.showErrors,
+                        widget._language == 'ar' ? 'الطائفة' : 'Sect',
+                        widget._language == 'ar'
+                            ? 'أدخل الطائفة'
+                            : 'Enter your sect',
+                        seetController,
+                        widget._language == 'ar'
+                            ? [
+                                'جميع الطوائف',
+                                'سني',
+                                'شيعي',
+                                'درزي',
+                                'علوي',
+                                'كاثوليكي',
+                                'بروتستانتي',
+                                'أرثوذكسي',
+                                'إنجيلي',
+                                'أرثوذكسي يهودي',
+                                'تقليدي',
+                                'إصلاح',
+                                'إعادة بناء',
+                                'فايشنافية',
+                                'شيفية',
+                                'شاكتي',
+                                'سمارتي',
+                                'تيرافادا',
+                                'ماهايانا',
+                                'فاجرايانا',
+                                'أخرى'
+                              ]
+                            : [
+                                'All Sects',
+                                'Sunni',
+                                'Shia',
+                                'Druze',
+                                'Alawite',
+                                'Catholic',
+                                'Protestant',
+                                'Orthodox',
+                                'Evangelical',
+                                'Orthodox Jewish',
+                                'Conservative',
+                                'Reform',
+                                'Reconstructionist',
+                                'Vaishnavism',
+                                'Shaivism',
+                                'Shaktism',
+                                'Smartism',
+                                'Theravada',
+                                'Mahayana',
+                                'Vajrayana',
+                                'Other'
+                              ],
+                        isRequired: true,
+                      ),
                     ],
                   ),
                 ),
@@ -1368,113 +1622,116 @@ class _Page6State extends State<Page6> {
     return Scaffold(
       body: Form(
         key: _formKey,
-        child: Padding(
-          padding: const EdgeInsets.all(25),
-          child: Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Flexible(
-                  flex: 2,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildTitleWithInputField(
-                        widget._language,
-                        widget.showErrors,
-                        widget._language == 'ar'
-                            ? 'تاريخ المغادرة'
-                            : 'DATE OF DEPARTURE',
-                        widget._language == 'ar'
-                            ? 'ادخل تاريخ المغادرة'
-                            : 'jj/mm/aaaa',
-                        dateLeaveController,
-                        isDate: true,
-                      ),
-                      _buildTitleWithInputField(
-                        widget._language,
-                        widget.showErrors,
-                        widget._language == 'ar'
-                            ? 'تاريخ الوصول'
-                            : 'DATE OF ARRIVAL',
-                        widget._language == 'ar'
-                            ? 'ادخل تاريخ الوصول'
-                            : 'jj/mm/aaaa',
-                        dateArriveController,
-                        isDate: true,
-                      ),
-                      _buildTitleWithInputField(
-                        widget._language,
-                        widget.showErrors,
-                        widget._language == 'ar'
-                            ? 'مدة الإقامة'
-                            : 'DURATION OF STAY',
-                        widget._language == 'ar'
-                            ? 'المدة بالأيام'
-                            : 'Duration in days',
-                        dureeController,
-                        isNumeric: true,
-                      ),
-                    ],
+        child: SingleChildScrollView(
+          // Ajout de SingleChildScrollView pour éviter l'overflow
+          child: Padding(
+            padding: const EdgeInsets.all(25),
+            child: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Flexible(
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildTitleWithInputField(
+                          widget._language,
+                          widget.showErrors,
+                          widget._language == 'ar'
+                              ? 'تاريخ المغادرة'
+                              : 'DATE OF DEPARTURE',
+                          widget._language == 'ar'
+                              ? 'ادخل تاريخ المغادرة'
+                              : 'jj/mm/aaaa',
+                          dateLeaveController,
+                          isDate: true,
+                        ),
+                        _buildTitleWithInputField(
+                          widget._language,
+                          widget.showErrors,
+                          widget._language == 'ar'
+                              ? 'تاريخ الوصول'
+                              : 'DATE OF ARRIVAL',
+                          widget._language == 'ar'
+                              ? 'ادخل تاريخ الوصول'
+                              : 'jj/mm/aaaa',
+                          dateArriveController,
+                          isDate: true,
+                        ),
+                        _buildTitleWithInputField(
+                          widget._language,
+                          widget.showErrors,
+                          widget._language == 'ar'
+                              ? 'مدة الإقامة'
+                              : 'DURATION OF STAY',
+                          widget._language == 'ar'
+                              ? 'المدة بالأيام'
+                              : 'Duration in days',
+                          dureeController,
+                          isNumeric: true,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                SizedBox(width: screenWidth * 0.02),
-                Flexible(
-                  flex: 2,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildTitleWithInputField(
-                        widget._language,
-                        widget.showErrors,
-                        widget._language == 'ar'
-                            ? 'اسم المحرم'
-                            : 'NAME OF MAHRAM',
-                        widget._language == 'ar'
-                            ? 'ادخل اسم المحرم'
-                            : 'Enter name of Mahram',
-                        nameMahramController,
-                        isText: true,
-                      ),
-                      _buildTitleWithInputField(
-                        widget._language,
-                        widget.showErrors,
-                        widget._language == 'ar' ? 'العلاقة' : 'RELATIONSHIP',
-                        widget._language == 'ar'
-                            ? 'ادخل العلاقة مع المحرم'
-                            : 'Enter relationship to Mahram',
-                        relationController,
-                        isText: true,
-                      ),
-                      _buildTitleWithInputField(
-                        widget._language,
-                        widget.showErrors,
-                        widget._language == 'ar'
-                            ? 'اسم الناقل'
-                            : 'CARRIER NAME',
-                        widget._language == 'ar'
-                            ? 'ادخل اسم الناقل'
-                            : 'Enter name of carrier',
-                        nameCompanyController,
-                        isText: true,
-                      ),
-                      _buildTitleWithInputField(
-                        widget._language,
-                        widget.showErrors,
-                        widget._language == 'ar' ? 'الوجهة' : 'DESTINATION',
-                        widget._language == 'ar'
-                            ? 'ادخل الوجهة'
-                            : 'Enter travel destination',
-                        destinationController,
-                        isText: true,
-                      ),
-                    ],
+                  SizedBox(width: screenWidth * 0.02),
+                  Flexible(
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildTitleWithInputField(
+                          widget._language,
+                          widget.showErrors,
+                          widget._language == 'ar'
+                              ? 'اسم المحرم'
+                              : 'NAME OF MAHRAM',
+                          widget._language == 'ar'
+                              ? 'ادخل اسم المحرم'
+                              : 'Enter name of Mahram',
+                          nameMahramController,
+                          isText: true,
+                        ),
+                        _buildTitleWithInputField(
+                          widget._language,
+                          widget.showErrors,
+                          widget._language == 'ar' ? 'العلاقة' : 'RELATIONSHIP',
+                          widget._language == 'ar'
+                              ? 'ادخل العلاقة مع المحرم'
+                              : 'Enter relationship to Mahram',
+                          relationController,
+                          isText: true,
+                        ),
+                        _buildTitleWithInputField(
+                          widget._language,
+                          widget.showErrors,
+                          widget._language == 'ar'
+                              ? 'اسم الناقل'
+                              : 'CARRIER NAME',
+                          widget._language == 'ar'
+                              ? 'ادخل اسم الناقل'
+                              : 'Enter name of carrier',
+                          nameCompanyController,
+                          isText: true,
+                        ),
+                        _buildTitleWithInputField(
+                          widget._language,
+                          widget.showErrors,
+                          widget._language == 'ar' ? 'الوجهة' : 'DESTINATION',
+                          widget._language == 'ar'
+                              ? 'ادخل الوجهة'
+                              : 'Enter travel destination',
+                          destinationController,
+                          isText: true,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
